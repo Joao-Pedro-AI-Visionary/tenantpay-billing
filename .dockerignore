@@ -1,0 +1,7 @@
+target/
+frontend/
+e2e/
+docs/
+.git/
+.github/
+**/node_modules/
