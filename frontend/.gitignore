@@ -1,0 +1,2 @@
+# The demo build flag is not a secret and must be versioned.
+!.env.demo
