@@ -207,6 +207,7 @@ Short ADR-style notes. Each one states the context, the decision and its trade-o
 - **Context**: the provider expects a fast `2xx`; processing touches several aggregates and may fail transiently.
 - **Decision**: the webhook endpoint only validates, stores and acknowledges. A scheduled processor claims due events with `SELECT ... FOR UPDATE SKIP LOCKED`, so several API instances can run it safely, and processes each event in its own transaction. Failures move the event to `FAILED` with exponential backoff and, after the last attempt, to `DEAD`. Admins can list and reprocess failed events.
 - **Trade-off**: activation is eventually consistent (sub-second with the default poll interval) instead of synchronous.
+- **Concurrency**: the handler and the cancel use case both lock the subscription row (`SELECT ... FOR UPDATE`) before touching its charges, in the same order, so a payment that races with a cancellation waits for it and never resurrects a canceled subscription. `ConcurrencyIT` reproduces that race against PostgreSQL. An event whose worker crashes on its last attempt (lease expired) goes straight to `DEAD` instead of looping.
 
 ### ADR 3: Tenant isolation in the application layer
 - **Context**: a shared schema with a `tenant_id` column is the simplest multi-tenant model to operate, but a missing filter leaks data.
@@ -272,6 +273,8 @@ cd frontend && npm install && npm run dev
 | `ASAAS_API_KEY` | empty | When set, switches to the real `AsaasGateway` |
 | `ASAAS_BASE_URL` | `https://api-sandbox.asaas.com/v3` | Asaas API base URL |
 | `TENANTPAY_DEV_TOOLS_ENABLED` | `false` (`true` in compose) | Enables the "simulate payment" endpoint used by the panel |
+
+The development defaults for `TENANTPAY_JWT_SECRET` and `TENANTPAY_ASAAS_WEBHOOK_TOKEN` are public in this repository, so the API **refuses to start** with them unless `TENANTPAY_DEV_TOOLS_ENABLED=true` (local development and compose). Any other environment must provide real secrets. Compose publishes its ports on `127.0.0.1` only.
 
 ### Switching from the fake gateway to the Asaas sandbox
 
