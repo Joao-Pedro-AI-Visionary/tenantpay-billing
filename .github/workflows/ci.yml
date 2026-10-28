@@ -28,6 +28,7 @@ jobs:
         run: ./mvnw -B verify
       - name: Upload JaCoCo report
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: jacoco-report
@@ -35,6 +36,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload test reports
         if: failure()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: backend-test-reports
@@ -90,6 +92,7 @@ jobs:
         run: docker compose -p tenantpay logs --no-color > compose.log
       - name: Upload e2e artifacts
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: e2e-artifacts
