@@ -1,6 +1,5 @@
 # TenantPay Billing
 
-[![CI](https://github.com/Joao-Pedro-AI-Visionary/tenantpay-billing/actions/workflows/ci.yml/badge.svg)](https://github.com/Joao-Pedro-AI-Visionary/tenantpay-billing/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
