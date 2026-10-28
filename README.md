@@ -6,6 +6,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
 ![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live%20on%20Vercel-000000?logo=vercel&logoColor=white)](https://tenantpay-billing.vercel.app)
 
 A multi-tenant payments and subscriptions API built with **Java 21**, **Spring Boot 3** and **Clean Architecture**.
 Tenants sign up, define plans, register customers and subscribe them. Charges are issued through a payment gateway port
@@ -16,6 +17,8 @@ A small Vue 3 panel and a Playwright end-to-end suite exercise the whole flow, f
 
 > Portfolio project. It runs fully offline with the fake gateway: no payment provider account or API key is needed.
 
+**Live demo:** [tenantpay-billing.vercel.app](https://tenantpay-billing.vercel.app) runs the panel in demo mode, with a mock API that stores seeded data in your browser (click "Enter demo"). No backend and no real payments are involved.
+
 ## Table of contents
 
 - [Features](#features)
@@ -24,6 +27,7 @@ A small Vue 3 panel and a Playwright end-to-end suite exercise the whole flow, f
 - [Getting started](#getting-started)
 - [API examples](#api-examples)
 - [Screenshots](#screenshots)
+- [UX principles](#ux-principles)
 - [Project layout](#project-layout)
 - [Roadmap](#roadmap)
 - [Acknowledgements](#acknowledgements)
@@ -301,7 +305,14 @@ npx playwright install chromium
 npx playwright test
 ```
 
-The suite signs up a tenant, logs in, creates a plan, subscribes a customer, sends a `PAYMENT_CONFIRMED` webhook twice to prove idempotency and checks that the panel shows `ACTIVE`. Each step saves a screenshot in `docs/screenshots/`.
+The demo mode smoke test builds the panel with `VITE_DEMO_MODE=true`, serves it with `vite preview` and needs no backend. Point it at any deployment with `DEMO_BASE_URL`:
+
+```bash
+npm run test:demo                                                   # local demo build
+DEMO_BASE_URL=https://tenantpay-billing.vercel.app npm run test:demo  # live demo
+```
+
+The full flow suite signs up a tenant, logs in, creates a plan, subscribes a customer, sends a `PAYMENT_CONFIRMED` webhook twice to prove idempotency and checks that the panel shows `ACTIVE`. Each step saves a screenshot in `docs/screenshots/`.
 
 ## API examples
 
@@ -370,6 +381,28 @@ Captured automatically by the Playwright suite.
 | 6. Subscription active | ![Active](docs/screenshots/06-subscription-active.png) |
 | 7. Dashboard | ![Dashboard](docs/screenshots/07-dashboard.png) |
 | 8. Simulate payment button (dev only) | ![Simulate](docs/screenshots/08-simulate-button.png) |
+| 9. Demo mode (live on Vercel) | ![Demo](docs/screenshots/09-demo-mode.png) |
+
+## UX principles
+
+The panel is a light, card based billing dashboard: one accent color, a sidebar with six items, status pills that combine text, color and icon, and Inter as the type face. Design decisions follow well known [Laws of UX](https://lawsofux.com/); [docs/UX.md](docs/UX.md) maps each one to the component that applies it.
+
+| Law | Where it shows up |
+|---|---|
+| Fitts | Every interactive target is at least 44px high |
+| Hick, Occam, Pareto | Six nav items; subscribe and cancel use progressive disclosure |
+| Jakob | Logo top left, tenant menu top right, sidebar navigation |
+| Proximity, Uniform Connectedness | Cards group related data; labels sit right above their inputs |
+| Miller | Forms are chunked into short sections |
+| Doherty | Skeleton loaders and pressed/loading button states give feedback in under 400ms |
+| Von Restorff | The accent color is reserved for the primary call to action |
+| Peak-End | A celebration state appears when a subscription becomes active |
+| Zeigarnik, Goal-Gradient | Onboarding checklist: create plan, add customer, subscribe, first payment |
+| Tesler, Postel | BRL amounts are auto formatted; CPF/CNPJ is accepted with or without punctuation |
+
+### Demo mode
+
+`npm run build:demo` (or `VITE_DEMO_MODE=true`) swaps the HTTP client for an in-browser mock API that implements the same contract, persisted in `localStorage` and seeded with sample data. A banner states "Demo mode: data is mocked in your browser" and offers a reset. The regular build does not include the mock at all. `frontend/vercel.json` builds the demo with SPA rewrites, so the panel can be hosted without the API.
 
 ## Project layout
 
@@ -384,7 +417,7 @@ Captured automatically by the Playwright suite.
 ├── src/test/java          # unit, ArchUnit (*Test) and Testcontainers (*IT)
 ├── frontend/              # Vue 3 + Vite + TypeScript panel
 ├── e2e/                   # Playwright suite
-├── docs/                  # API contract and screenshots
+├── docs/                  # API contract, UX notes and screenshots
 ├── Dockerfile             # API image (multi-stage)
 └── docker-compose.yml     # postgres + api + frontend
 ```
