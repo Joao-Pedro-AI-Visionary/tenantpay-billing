@@ -1,0 +1,22 @@
+# Java / Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.log
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+# Node
+node_modules/
+frontend/dist/
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+# Env
+.env
+.env.*
+!.env.example
+# Local results
+RESULTS.md
