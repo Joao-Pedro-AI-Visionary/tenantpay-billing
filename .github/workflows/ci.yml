@@ -63,7 +63,9 @@ jobs:
 
   e2e:
     name: E2E (docker compose + Playwright)
-    runs-on: [self-hosted, linux]
+    # Runner do WSL: no host "box" o container da API sai com código 1 no
+    # boot; o mesmo stack sobe saudável no WSL.
+    runs-on: [self-hosted, linux, wsl]
     timeout-minutes: 30
     needs: [backend, frontend]
     steps:
@@ -89,7 +91,7 @@ jobs:
         run: npx playwright test
       - name: Compose logs
         if: failure()
-        run: docker compose -p tenantpay logs --no-color > compose.log
+        run: docker compose -p tenantpay logs --no-color | tee compose.log
       - name: Upload e2e artifacts
         if: always()
         continue-on-error: true
