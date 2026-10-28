@@ -19,7 +19,8 @@ import type {
 
 export const DEMO_STORAGE_PREFIX = 'tenantpay.demo.'
 const DB_KEY = `${DEMO_STORAGE_PREFIX}db`
-const DB_VERSION = 1
+// Version 2: the demo password is generated at seed time, so older stored data is reseeded.
+const DB_VERSION = 2
 /** Simulated network latency, kept small so feedback stays under the Doherty threshold. */
 const LATENCY_MS = 150
 /** Time the simulated inbox takes to process a webhook. */

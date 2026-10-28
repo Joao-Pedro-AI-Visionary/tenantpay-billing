@@ -45,7 +45,7 @@ class AuthUseCasesTest {
         signUp.execute(new SignUpTenant.Command("Acme Gym", "owner@acme.test", PASSWORD));
 
         assertThatThrownBy(() -> signUp.execute(
-                new SignUpTenant.Command("Other", "OWNER@acme.test", "another-pass")))
+                new SignUpTenant.Command("Other", "OWNER@acme.test", PASSWORD + "-other")))
                 .isInstanceOf(ConflictException.class);
         assertThat(tenants.rows).hasSize(1);
     }

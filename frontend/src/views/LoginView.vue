@@ -48,19 +48,31 @@ async function loadDemoCredentials(): Promise<Credentials | null> {
 }
 
 onMounted(() => {
-  if (DEMO_MODE) void loadDemoCredentials()
+  if (!DEMO_MODE) return
+  loadDemoCredentials().catch((err: unknown) => {
+    error.value = errorMessage(err)
+  })
 })
 
 async function enterDemo(): Promise<void> {
   enteringDemo.value = true
-  // Read again on click: a reset in another tab reseeds the data with a new password.
-  const creds = await loadDemoCredentials()
-  if (creds) {
+  error.value = null
+  try {
+    // Read again on click: a reset in another tab reseeds the data with a new password.
+    const creds = await loadDemoCredentials()
+    if (!creds) {
+      error.value = 'Demo data is unavailable. Use "Reset demo data" and try again.'
+      return
+    }
     form.email = creds.email
     form.password = creds.password
     await logIn(creds.email, creds.password)
+  } catch (err) {
+    // A failed chunk load (for example after a redeploy) must not leave the button spinning.
+    error.value = errorMessage(err)
+  } finally {
+    enteringDemo.value = false
   }
-  enteringDemo.value = false
 }
 </script>
 

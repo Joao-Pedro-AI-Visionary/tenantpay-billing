@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,13 +58,13 @@ class AuthAndValidationIT extends IntegrationTestBase {
         Account account = signup("Dup Co");
 
         Resp dup = post("/api/v1/auth/signup", null,
-                Map.of("tenantName", "Other Co", "email", account.email(), "password", "another-pass"));
+                Map.of("tenantName", "Other Co", "email", account.email(), "password", UUID.randomUUID().toString()));
         assertProblem(dup, 409);
 
         assertProblem(post("/api/v1/auth/login", null,
-                Map.of("email", account.email(), "password", "wrong-password")), 401);
+                Map.of("email", account.email(), "password", account.password() + "-wrong")), 401);
         assertProblem(post("/api/v1/auth/login", null,
-                Map.of("email", uniqueEmail("nobody"), "password", "whatever-pass")), 401);
+                Map.of("email", uniqueEmail("nobody"), "password", account.password())), 401);
         assertProblem(post("/api/v1/auth/login", null, Map.of("email", "bad")), 400);
     }
 
