@@ -43,12 +43,14 @@ springdoc:
 
 tenantpay:
   jwt:
-    # Development only default. Production must set TENANTPAY_JWT_SECRET (at least 32 bytes).
+    # Development only default, rejected at startup unless dev tools are enabled (see DefaultSecretsGuard).
+    # Production must set TENANTPAY_JWT_SECRET (at least 32 bytes).
     secret: ${TENANTPAY_JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
     ttl: ${TENANTPAY_JWT_TTL:PT1H}
   asaas:
     base-url: ${ASAAS_BASE_URL:https://api-sandbox.asaas.com/v3}
     api-key: ${ASAAS_API_KEY:}
+    # Development only default, rejected at startup unless dev tools are enabled (see DefaultSecretsGuard).
     webhook-token: ${TENANTPAY_ASAAS_WEBHOOK_TOKEN:dev-webhook-token}
   webhooks:
     poll-interval: ${TENANTPAY_WEBHOOKS_POLL_INTERVAL:PT0.5S}

@@ -3,6 +3,7 @@ package com.tenantpay.billing.infrastructure.security;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.tenantpay.billing.application.port.PasswordHasher;
 import com.tenantpay.billing.application.port.TokenIssuer;
+import com.tenantpay.billing.infrastructure.config.DefaultSecretsGuard;
 import com.tenantpay.billing.infrastructure.config.TenantpayProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ public class JwtConfig {
 
     @Bean
     SecretKey jwtSigningKey(TenantpayProperties properties) {
+        DefaultSecretsGuard.verify(properties);
         String secret = properties.jwt().secret();
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
             throw new IllegalStateException("tenantpay.jwt.secret must have at least " + MIN_SECRET_BYTES + " bytes");
