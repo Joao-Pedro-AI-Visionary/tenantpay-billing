@@ -141,7 +141,7 @@ Keep only what the main job needs.
 
 ## Demo mode
 
-`npm run build:demo` (Vite mode `demo`, `.env.demo` sets `VITE_DEMO_MODE=true`) builds the panel
+`npm run build:demo` (Vite `--mode demo`, read as `import.meta.env.MODE`, no env file) builds the panel
 with an in-browser mock of the whole API contract (`mock/demoApi.ts`), persisted in localStorage
 under `tenantpay.demo.*` and seeded with a sample tenant, "Acme Gym". The normal `npm run build`
 aliases the mock to a stub (`#demo-api` in `vite.config.ts`), so no mock code or sample data ships in

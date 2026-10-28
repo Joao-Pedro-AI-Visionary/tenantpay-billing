@@ -20,7 +20,7 @@ Money is always an integer amount of cents (`amountCents`), currency `BRL`.
 
 ### POST /api/v1/auth/signup
 Creates a tenant and its first ADMIN user. Emails are globally unique.
-Request: `{ "tenantName": "Acme Gym", "email": "owner@acme.test", "password": "s3cret-pass" }`
+Request: `{ "tenantName": "Acme Gym", "email": "owner@acme.test", "password": "<8 to 72 characters>" }`
 (`tenantName` 2..120 chars, `email` valid, `password` 8..72 chars)
 Response 201:
 ```json
@@ -29,7 +29,7 @@ Response 201:
 409 when the email is already registered.
 
 ### POST /api/v1/auth/login
-Request: `{ "email": "owner@acme.test", "password": "s3cret-pass" }`
+Request: `{ "email": "owner@acme.test", "password": "<8 to 72 characters>" }`
 Response 200: same shape as signup. 401 on bad credentials.
 
 ### GET /api/v1/me

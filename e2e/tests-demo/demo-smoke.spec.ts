@@ -16,6 +16,8 @@ test('demo mode: enter demo, KPIs, create a plan, simulate a payment, subscripti
     await expect(page.getByTestId('demo-banner')).toBeVisible()
     await expect(page.getByTestId('demo-banner')).toContainText('Demo mode: data is mocked in your browser')
     await expect(page.getByTestId('demo-email')).toHaveText('demo@tenantpay.dev')
+    // The password is generated per browser when the mock seeds its data, never a literal in the source.
+    await expect(page.getByTestId('demo-password')).toHaveText(/^[0-9a-f]{16}$/)
     await page.getByTestId('demo-enter').click()
     await expect(page).toHaveURL(/\/dashboard$/)
     await expect(page.getByTestId('current-tenant')).toHaveText('Acme Gym')

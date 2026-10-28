@@ -6,9 +6,10 @@
  *   (tenant "Acme Gym") the first time the demo loads.
  * - Webhook processing is asynchronous like the real inbox: a simulated payment is stored as RECEIVED
  *   and applied on a later request once its processing time has passed.
- * Nothing here talks to a server and no credential in this file is real.
+ * - The demo account password is generated in the browser when the data is seeded, so no credential
+ *   is written in the source. The login screen reads it through demoCredentials().
+ * Nothing here talks to a server.
  */
-import { DEMO_CREDENTIALS } from '../config'
 import type {
   ChargeStatus,
   Interval,
@@ -25,6 +26,9 @@ const LATENCY_MS = 150
 const PROCESSING_DELAY_MS = 1500
 
 const DAY = 24 * 60 * 60 * 1000
+
+/** Email of the seeded demo tenant admin. Its password is generated per browser (see seed). */
+export const DEMO_EMAIL = 'demo@tenantpay.dev'
 
 interface StoredTenant {
   id: string
@@ -127,6 +131,13 @@ function uuid(): string {
   return `00000000-0000-4000-8000-${(rand + counter.toString(16)).slice(-12)}`
 }
 
+/** Random demo password (16 hex chars). getRandomValues also works outside secure contexts. */
+function randomPassword(): string {
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 function shortId(): string {
   return uuid().replace(/-/g, '').slice(0, 16)
 }
@@ -197,8 +208,8 @@ function seed(): DemoDb {
       {
         id: '7d0c2b1e-4a5f-4c3e-9b1a-000000000002',
         tenantId,
-        email: DEMO_CREDENTIALS.email,
-        password: DEMO_CREDENTIALS.password,
+        email: DEMO_EMAIL,
+        password: randomPassword(),
         role: 'ADMIN',
       },
     ],
@@ -374,6 +385,12 @@ function loadDb(): DemoDb {
 
 function saveDb(db: DemoDb): void {
   localStorage.setItem(DB_KEY, JSON.stringify(db))
+}
+
+/** Credentials of the seeded demo admin, shown on the login screen. Seeds the data on first use. */
+export function demoCredentials(): { email: string; password: string } | null {
+  const user = loadDb().users.find((u) => u.email === DEMO_EMAIL)
+  return user ? { email: user.email, password: user.password } : null
 }
 
 /** Removes every demo key so the next request reseeds the sample data. */

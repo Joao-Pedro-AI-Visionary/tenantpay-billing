@@ -148,7 +148,7 @@ public abstract class IntegrationTestBase {
 
     Account signup(String tenantName) {
         String email = uniqueEmail("owner");
-        String password = "s3cret-pass";
+        String password = UUID.randomUUID().toString();
         Resp resp = post("/api/v1/auth/signup", null,
                 Map.of("tenantName", tenantName, "email", email, "password", password));
         assertThat(resp.status()).as(resp.rawBody()).isEqualTo(201);

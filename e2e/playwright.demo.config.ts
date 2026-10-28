@@ -2,7 +2,7 @@
  * Demo mode smoke suite (no backend needed).
  *
  * Local run (from e2e/):  npm run test:demo
- *   Builds the panel with `npm run build:demo` (VITE_DEMO_MODE=true, in-browser mock API) and serves it
+ *   Builds the panel with `npm run build:demo` (Vite `--mode demo`, in-browser mock API) and serves it
  *   with `vite preview` on http://localhost:4173.
  *
  * Against a deployed demo (for example the Vercel preview):

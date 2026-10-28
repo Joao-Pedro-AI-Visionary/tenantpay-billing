@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
@@ -15,7 +16,8 @@ const stamp = Date.now()
 const tenant = {
   name: `Acme Gym ${stamp}`,
   email: `owner.${stamp}@acme.test`,
-  password: 'Sup3r-secret-pass',
+  // Generated per run, never a literal: the suite carries no credential.
+  password: randomUUID(),
 }
 const plan = { name: `Pro ${stamp}`, description: 'Unlimited classes, billed monthly', amount: '49,90', cents: 4990 }
 const customer = { name: `Jane Doe ${stamp}`, email: `jane.${stamp}@example.test`, document: validCpf(stamp) }

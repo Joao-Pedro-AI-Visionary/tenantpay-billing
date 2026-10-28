@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [vue()],
   resolve: {
     alias: {
-      // Demo mode (`--mode demo`, .env.demo) bundles the in-browser mock API; every other build gets a stub.
+      // Demo mode (`--mode demo`) bundles the in-browser mock API; every other build gets a stub.
       '#demo-api': fileURLToPath(
         new URL(mode === 'demo' ? './src/mock/demoApi.ts' : './src/mock/demoStub.ts', import.meta.url),
       ),

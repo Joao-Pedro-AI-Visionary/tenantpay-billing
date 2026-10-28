@@ -10,3 +10,7 @@ export function demoFetch(): Promise<Response> {
 export function resetDemoData(): void {
   // Nothing to reset outside demo mode.
 }
+
+export function demoCredentials(): { email: string; password: string } | null {
+  return null
+}

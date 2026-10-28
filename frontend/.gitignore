@@ -1,4 +1,2 @@
-# The demo build flag is not a secret and must be versioned.
 .vercel
 .env*
-!.env.demo

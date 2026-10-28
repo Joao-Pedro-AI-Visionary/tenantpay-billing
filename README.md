@@ -308,7 +308,7 @@ npx playwright install chromium
 npx playwright test
 ```
 
-The demo mode smoke test builds the panel with `VITE_DEMO_MODE=true`, serves it with `vite preview` and needs no backend. Point it at any deployment with `DEMO_BASE_URL`:
+The demo mode smoke test builds the panel in demo mode (`npm run build:demo`), serves it with `vite preview` and needs no backend. Point it at any deployment with `DEMO_BASE_URL`:
 
 ```bash
 npm run test:demo                                                   # local demo build
@@ -322,13 +322,14 @@ The full flow suite signs up a tenant, logs in, creates a plan, subscribes a cus
 ```bash
 API=http://localhost:18080
 
-# 1. Sign up a tenant (returns a JWT)
+# 1. Sign up a tenant (returns a JWT). The password is generated, so none is typed or stored in the docs.
+PASSWORD=$(openssl rand -hex 16)
 TOKEN=$(curl -s -X POST $API/api/v1/auth/signup -H 'Content-Type: application/json' \
-  -d '{"tenantName":"Acme Gym","email":"owner@acme.test","password":"s3cret-pass"}' | jq -r .accessToken)
+  -d "$(jq -nc --arg p "$PASSWORD" '{tenantName: "Acme Gym", email: "owner@acme.test", password: $p}')" | jq -r .accessToken)
 
 # 2. Log in again later
 curl -s -X POST $API/api/v1/auth/login -H 'Content-Type: application/json' \
-  -d '{"email":"owner@acme.test","password":"s3cret-pass"}'
+  -d "$(jq -nc --arg p "$PASSWORD" '{email: "owner@acme.test", password: $p}')"
 
 # 3. Create a plan (amounts are in cents)
 PLAN=$(curl -s -X POST $API/api/v1/plans -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
@@ -405,7 +406,7 @@ The panel is a light, card based billing dashboard: one accent color, a sidebar 
 
 ### Demo mode
 
-`npm run build:demo` (or `VITE_DEMO_MODE=true`) swaps the HTTP client for an in-browser mock API that implements the same contract, persisted in `localStorage` and seeded with sample data. A banner states "Demo mode: data is mocked in your browser" and offers a reset. The regular build does not include the mock at all. `frontend/vercel.json` builds the demo with SPA rewrites, so the panel can be hosted without the API.
+`npm run build:demo` (Vite `--mode demo`, no env file needed) swaps the HTTP client for an in-browser mock API that implements the same contract, persisted in `localStorage` and seeded with sample data. The demo login password is generated in the browser at seed time and shown on the login screen. A banner states "Demo mode: data is mocked in your browser" and offers a reset. The regular build does not include the mock at all. `frontend/vercel.json` builds the demo with SPA rewrites, so the panel can be hosted without the API.
 
 ## Project layout
 

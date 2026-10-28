@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import AuthShell from '../components/AuthShell.vue'
 import { api, errorMessage } from '../api'
 import { setToken } from '../auth'
-import { DEMO_CREDENTIALS, DEMO_MODE } from '../config'
+import { DEMO_MODE } from '../config'
+
+interface Credentials {
+  email: string
+  password: string
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -32,11 +37,29 @@ async function submit(): Promise<void> {
   submitting.value = false
 }
 
+// The demo password is generated in the browser when the mock data is seeded, so it is read from the
+// mock API (loaded on demand, absent from the normal build) instead of living in the source.
+const demoCreds = ref<Credentials | null>(null)
+
+async function loadDemoCredentials(): Promise<Credentials | null> {
+  const { demoCredentials } = await import('#demo-api')
+  demoCreds.value = demoCredentials()
+  return demoCreds.value
+}
+
+onMounted(() => {
+  if (DEMO_MODE) void loadDemoCredentials()
+})
+
 async function enterDemo(): Promise<void> {
   enteringDemo.value = true
-  form.email = DEMO_CREDENTIALS.email
-  form.password = DEMO_CREDENTIALS.password
-  await logIn(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password)
+  // Read again on click: a reset in another tab reseeds the data with a new password.
+  const creds = await loadDemoCredentials()
+  if (creds) {
+    form.email = creds.email
+    form.password = creds.password
+    await logIn(creds.email, creds.password)
+  }
   enteringDemo.value = false
 }
 </script>
@@ -51,11 +74,11 @@ async function enterDemo(): Promise<void> {
       <dl class="demo-creds">
         <div>
           <dt>Email</dt>
-          <dd class="mono" data-testid="demo-email">{{ DEMO_CREDENTIALS.email }}</dd>
+          <dd class="mono" data-testid="demo-email">{{ demoCreds?.email ?? '...' }}</dd>
         </div>
         <div>
           <dt>Password</dt>
-          <dd class="mono" data-testid="demo-password">{{ DEMO_CREDENTIALS.password }}</dd>
+          <dd class="mono" data-testid="demo-password">{{ demoCreds?.password ?? '...' }}</dd>
         </div>
       </dl>
       <button
