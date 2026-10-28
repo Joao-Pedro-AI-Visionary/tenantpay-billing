@@ -18,6 +18,17 @@ public interface ChargeJpaRepository extends JpaRepository<ChargeEntity, UUID> {
 
     Optional<ChargeEntity> findByGatewayPaymentId(String gatewayPaymentId);
 
+    /** Scalar projection: nothing enters the persistence context, so a later entity read is fresh. */
+    @Query("select c.tenantId as tenantId, c.subscriptionId as subscriptionId from ChargeEntity c "
+            + "where c.gatewayPaymentId = :gatewayPaymentId")
+    Optional<OwnerRow> findOwnerByGatewayPaymentId(@Param("gatewayPaymentId") String gatewayPaymentId);
+
+    interface OwnerRow {
+        UUID getTenantId();
+
+        UUID getSubscriptionId();
+    }
+
     @Query("select coalesce(sum(c.amountCents), 0) from ChargeEntity c "
             + "where c.tenantId = :tenantId and c.status in :statuses")
     long sumAmount(@Param("tenantId") UUID tenantId, @Param("statuses") Collection<ChargeStatus> statuses);

@@ -97,7 +97,23 @@ class WebhookUseCasesTest {
         assertThat(only().attempts()).isEqualTo(1);
         assertThat(charge.status()).isEqualTo(ChargeStatus.CONFIRMED);
         assertThat(subscription.status()).isEqualTo(SubscriptionStatus.ACTIVE);
+        assertThat(subscriptions.locked).as("payment path locks the subscription row").containsExactly(subscription.id());
         assertThat(process.processDue()).isZero();
+    }
+
+    @Test
+    void eventWhoseLastAttemptCrashedTheWorkerGoesDeadInsteadOfLooping() {
+        send("evt_crash", "PAYMENT_CONFIRMED", "pay_abc");
+        WebhookEvent event = only();
+        for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
+            event.startProcessing(clock.instant(), Duration.ofMinutes(5)); // claimed, then the worker died
+            clock.advance(Duration.ofMinutes(6));
+        }
+
+        assertThat(process.processDue()).as("nothing is handed to a handler").isZero();
+        assertThat(only().status()).isEqualTo(WebhookEventStatus.DEAD);
+        assertThat(only().attempts()).isEqualTo(policy.maxAttempts());
+        assertThat(subscription.status()).isEqualTo(SubscriptionStatus.PENDING);
     }
 
     @Test

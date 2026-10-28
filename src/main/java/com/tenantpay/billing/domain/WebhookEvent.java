@@ -79,6 +79,23 @@ public final class WebhookEvent {
         nextAttemptAt = now.plus(lease);
     }
 
+    /**
+     * True when a worker crashed (the lease expired) on the last allowed attempt. Such an event must not be claimed
+     * again: an event that kills the worker every time would otherwise loop forever.
+     */
+    public boolean leaseExpiredOnLastAttempt(Instant now, RetryPolicy policy) {
+        return status == WebhookEventStatus.PROCESSING && nextAttemptAt != null && !nextAttemptAt.isAfter(now)
+                && attempts >= policy.maxAttempts();
+    }
+
+    /** Moves an event whose final attempt crashed to DEAD. */
+    public void markAbandoned(Instant now) {
+        requireProcessing("be abandoned");
+        status = WebhookEventStatus.DEAD;
+        lastError = "Worker lease expired on attempt " + attempts + " of the retry budget";
+        nextAttemptAt = null;
+    }
+
     public void markProcessed(Instant now) {
         finish(WebhookEventStatus.PROCESSED, now);
     }

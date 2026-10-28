@@ -39,7 +39,7 @@ public class CancelSubscription {
 
     public SubscriptionView execute(UUID tenantId, UUID subscriptionId) {
         return uow.inTransaction(() -> {
-            Subscription subscription = subscriptions.findById(tenantId, subscriptionId)
+            Subscription subscription = subscriptions.findByIdForUpdate(tenantId, subscriptionId)
                     .orElseThrow(() -> NotFoundException.of("Subscription", subscriptionId));
             subscription.cancel(clock.instant());
             List<Charge> open = charges.findBySubscriptionIds(tenantId, List.of(subscriptionId)).stream()

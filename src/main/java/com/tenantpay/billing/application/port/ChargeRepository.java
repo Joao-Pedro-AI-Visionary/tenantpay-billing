@@ -22,6 +22,16 @@ public interface ChargeRepository {
      */
     Optional<Charge> findByGatewayPaymentId(String gatewayPaymentId);
 
+    /**
+     * Same system lookup as {@link #findByGatewayPaymentId(String)} but returns only the owner keys, so the caller can
+     * lock the subscription before it loads (and caches) the charge itself.
+     */
+    Optional<ChargeOwner> findOwnerByGatewayPaymentId(String gatewayPaymentId);
+
+    /** Tenant and subscription that own a charge. */
+    record ChargeOwner(UUID tenantId, UUID subscriptionId) {
+    }
+
     /** Sum of CONFIRMED and RECEIVED charges. */
     long sumPaidAmountCents(UUID tenantId);
 }

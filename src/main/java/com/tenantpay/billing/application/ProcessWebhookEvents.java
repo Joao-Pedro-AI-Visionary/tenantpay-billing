@@ -15,6 +15,7 @@ import com.tenantpay.billing.domain.WebhookEventStatus;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,11 +62,17 @@ public class ProcessWebhookEvents {
         Instant now = clock.instant();
         List<UUID> claimed = uow.inTransaction(() -> {
             List<WebhookEvent> due = events.lockDue(now, batchSize);
+            List<UUID> ids = new ArrayList<>();
             for (WebhookEvent event : due) {
-                event.startProcessing(now, lease);
+                if (event.leaseExpiredOnLastAttempt(now, retryPolicy)) {
+                    event.markAbandoned(now);
+                } else {
+                    event.startProcessing(now, lease);
+                    ids.add(event.id());
+                }
                 events.save(event);
             }
-            return due.stream().map(WebhookEvent::id).toList();
+            return ids;
         });
         claimed.forEach(this::processOne);
         return claimed.size();
@@ -104,11 +111,16 @@ public class ProcessWebhookEvents {
         if (event.paymentId() == null || event.paymentId().isBlank()) {
             throw new IllegalStateException("Event " + event.eventId() + " has no payment id");
         }
+        ChargeRepository.ChargeOwner owner = charges.findOwnerByGatewayPaymentId(event.paymentId())
+                .orElseThrow(() -> new NotFoundException("No charge for gateway payment " + event.paymentId()));
+        event.assignTenant(owner.tenantId());
+        // Lock the subscription first (same order as CancelSubscription), then read the charge, so a concurrent
+        // cancellation is either fully visible here or waits for this transaction. A canceled subscription is never
+        // resurrected by a payment that raced with it.
+        Subscription subscription = subscriptions.findByIdForUpdate(owner.tenantId(), owner.subscriptionId())
+                .orElseThrow(() -> NotFoundException.of("Subscription", owner.subscriptionId()));
         Charge charge = charges.findByGatewayPaymentId(event.paymentId())
                 .orElseThrow(() -> new NotFoundException("No charge for gateway payment " + event.paymentId()));
-        event.assignTenant(charge.tenantId());
-        Subscription subscription = subscriptions.findById(charge.tenantId(), charge.subscriptionId())
-                .orElseThrow(() -> NotFoundException.of("Subscription", charge.subscriptionId()));
 
         switch (event.eventType()) {
             case PAYMENT_CONFIRMED -> {

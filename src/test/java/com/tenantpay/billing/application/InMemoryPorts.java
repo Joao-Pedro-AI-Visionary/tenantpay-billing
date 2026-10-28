@@ -161,6 +161,15 @@ final class InMemoryPorts {
             return Optional.ofNullable(rows.get(subscriptionId)).filter(s -> s.tenantId().equals(tenantId));
         }
 
+        /** Ids passed to {@link #findByIdForUpdate}, so tests can assert which paths take the row lock. */
+        final List<UUID> locked = new ArrayList<>();
+
+        @Override
+        public Optional<Subscription> findByIdForUpdate(UUID tenantId, UUID subscriptionId) {
+            locked.add(subscriptionId);
+            return findById(tenantId, subscriptionId);
+        }
+
         @Override
         public List<Subscription> findAll(UUID tenantId, SubscriptionStatus status) {
             return rows.values().stream()
@@ -198,6 +207,11 @@ final class InMemoryPorts {
         @Override
         public Optional<Charge> findByGatewayPaymentId(String gatewayPaymentId) {
             return rows.values().stream().filter(c -> c.gatewayPaymentId().equals(gatewayPaymentId)).findFirst();
+        }
+
+        @Override
+        public Optional<ChargeOwner> findOwnerByGatewayPaymentId(String gatewayPaymentId) {
+            return findByGatewayPaymentId(gatewayPaymentId).map(c -> new ChargeOwner(c.tenantId(), c.subscriptionId()));
         }
 
         @Override

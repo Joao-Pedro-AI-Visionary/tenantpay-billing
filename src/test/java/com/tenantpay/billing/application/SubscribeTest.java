@@ -95,6 +95,7 @@ class SubscribeTest {
         assertThat(canceled.subscription().status()).isEqualTo(SubscriptionStatus.CANCELED);
         assertThat(canceled.latestCharge().status()).isEqualTo(ChargeStatus.CANCELED);
         assertThat(gateway.canceled).containsExactly(view.latestCharge().gatewayPaymentId());
+        assertThat(subscriptions.locked).as("cancel locks the subscription row").containsExactly(id);
         assertThatThrownBy(() -> cancel.execute(tenant, id)).isInstanceOf(InvalidStateTransitionException.class);
         assertThatThrownBy(() -> cancel.execute(UUID.randomUUID(), id)).isInstanceOf(NotFoundException.class);
     }

@@ -46,6 +46,12 @@ class ChargeRepositoryAdapter implements ChargeRepository {
     }
 
     @Override
+    public Optional<ChargeOwner> findOwnerByGatewayPaymentId(String gatewayPaymentId) {
+        return charges.findOwnerByGatewayPaymentId(gatewayPaymentId)
+                .map(row -> new ChargeOwner(row.getTenantId(), row.getSubscriptionId()));
+    }
+
+    @Override
     public long sumPaidAmountCents(UUID tenantId) {
         return charges.sumAmount(tenantId, PAID);
     }

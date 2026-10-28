@@ -3,6 +3,7 @@ package com.tenantpay.billing.domain;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 import static com.tenantpay.billing.domain.Fixtures.NOW;
@@ -104,6 +105,36 @@ class WebhookEventTest {
         e.markProcessed(NOW);
         assertThatThrownBy(() -> e.startProcessing(NOW, LEASE)).isInstanceOf(InvalidStateTransitionException.class);
         assertThatThrownBy(() -> e.markFailed("x", NOW, policy)).isInstanceOf(InvalidStateTransitionException.class);
+    }
+
+    @Test
+    void workerCrashOnTheLastAttemptIsDetectedAndMovesToDead() {
+        WebhookEvent e = newEvent();
+        Instant t = NOW;
+        for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
+            assertThat(e.leaseExpiredOnLastAttempt(t, policy)).isFalse();
+            e.startProcessing(t, LEASE);
+            t = t.plus(LEASE); // the worker crashed: nobody marked the attempt, the lease simply ran out
+        }
+
+        assertThat(e.attempts()).isEqualTo(policy.maxAttempts());
+        assertThat(e.leaseExpiredOnLastAttempt(t, policy)).isTrue();
+        e.markAbandoned(t);
+
+        assertThat(e.status()).isEqualTo(WebhookEventStatus.DEAD);
+        assertThat(e.nextAttemptAt()).isNull();
+        assertThat(e.lastError()).contains("lease expired");
+    }
+
+    @Test
+    void leaseStillRunningIsNotAbandoned() {
+        WebhookEvent e = newEvent();
+        for (int attempt = 1; attempt <= policy.maxAttempts(); attempt++) {
+            e.startProcessing(NOW.plus(LEASE.multipliedBy(attempt - 1)), LEASE);
+        }
+        Instant beforeLeaseEnds = e.nextAttemptAt().minusSeconds(1);
+
+        assertThat(e.leaseExpiredOnLastAttempt(beforeLeaseEnds, policy)).isFalse();
     }
 
     @Test

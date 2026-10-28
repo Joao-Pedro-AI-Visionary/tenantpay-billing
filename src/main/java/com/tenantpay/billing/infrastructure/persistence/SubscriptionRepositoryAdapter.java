@@ -30,6 +30,11 @@ class SubscriptionRepositoryAdapter implements SubscriptionRepository {
     }
 
     @Override
+    public Optional<Subscription> findByIdForUpdate(UUID tenantId, UUID subscriptionId) {
+        return subscriptions.lockByIdAndTenantId(subscriptionId, tenantId).map(SubscriptionEntity::toDomain);
+    }
+
+    @Override
     public List<Subscription> findAll(UUID tenantId, SubscriptionStatus status) {
         List<SubscriptionEntity> rows = status == null
                 ? subscriptions.findByTenantIdOrderByCreatedAtDescIdDesc(tenantId)
